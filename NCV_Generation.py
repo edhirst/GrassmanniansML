@@ -1,9 +1,9 @@
-'''SSYT fake data generation - to run on the hpc (bottleneck is the data loading and checking against loaded data - so not worth parallelising)'''
+'''SSYT Non-Cluster-Variable (NCV) data generation - to run on the hpc (bottleneck is the data loading and checking against loaded data - so not worth parallelising)'''
 '''
 Run the cells sequentially, or the first 3 together on a hpc.
-Cell 1 ==> import necessary libraries, then import and reformat the dataset to model fake data for.
-Cell 2 ==> generate the fake data (fitting the same distribution as the real data), ensuring the SSYT condition is met, and there are no repeats of real data or within the fake data.
-Cell 3 ==> save the fake data to an output file.
+Cell 1 ==> import necessary libraries, then import and reformat the dataset to model NCV data for.
+Cell 2 ==> generate the NCV data (fitting the same distribution as the CV data), ensuring the SSYT condition is met, and there are no repeats of CV data or within the NCV data.
+Cell 3 ==> save the NCV data to an output file.
 Cell 4 ==> checking system to ensure the SSYT condition holds.
 '''
 ### Cell 1 ###
@@ -13,7 +13,7 @@ from ast import literal_eval as LE
 
 #Set params
 G_choice = 0        #...select the indices of the filepath to import data from (i.e. choose the data to import): {0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}
-fake_size = 10000   #...select how many fake SSYTs to make
+NCV_size = 10000    #...select how many NCV SSYTs to make
 resample_freq = 6   #...choose how frequently to resample entries ~ 1/resample_size (note only updates the middle)
 
 #Import data
@@ -42,10 +42,10 @@ Data = np.array(Data)
 del(tab_idx,tab,new_tab)
 
 #%% ### Cell 2 ###
-#Generate the fake data
-Fake = []
+#Generate the NCV data
+NCV = []
 
-while len(Fake) < fake_size:
+while len(NCV) < NCV_size:
     r=np.random.choice(range(1,max_r+1)) #...randomly select the rank of the SSYT (i.e. number of columns)
     trial = np.sort(np.random.choice(range(1,k+1),n*r)).reshape(n,r) #..start with a sorted array st the condition of \geq to the right automatically satisfied
     skip = False #...boolean to check for uncorrectable SSYT (skip where they occur and generate a new one)
@@ -101,7 +101,7 @@ while len(Fake) < fake_size:
     new_tab[:len(trial),:len(trial[0])] = trial
     trial = np.array(new_tab)
         
-    #Check not in the real data
+    #Check not in the CV data
     for tab in Data:
         if np.array_equal(trial,tab): 
             skip = True
@@ -109,7 +109,7 @@ while len(Fake) < fake_size:
     if skip: continue
     #print('Data pass')
     #Check not already generated
-    for tab in Fake:
+    for tab in NCV:
         if np.array_equal(trial,tab): 
             skip = True
             break
@@ -117,29 +117,29 @@ while len(Fake) < fake_size:
     #print('New pass\n\n##############\n')
     
     #All tests passed, so add to the list
-    Fake.append(trial)
-    print('Progress...',len(Fake))
+    NCV.append(trial)
+    print('Progress...',len(NCV))
     
     #Save data at regular intervals
-    if len(Fake)%500==0:
-        with open('./Fake'+str(prefixes[G_choice])+'_'+str(fake_size)+'.txt','w') as file:
-            file.write(str(Fake))
+    if len(NCV)%500==0:
+        with open('./NCV'+str(prefixes[G_choice])+'_'+str(NCV_size)+'.txt','w') as file:
+            file.write(str(NCV))
         del(file)
             
 del(i,j,r,tab,new_tab,trial)
 
 
 #%% ### Cell 3 ###
-#Save the fake data
-with open('./Fake'+str(prefixes[G_choice])+'_'+str(fake_size)+'.txt','w') as file:
-    file.write(str(Fake))
+#Save the NCV data
+with open('./NCV'+str(prefixes[G_choice])+'_'+str(NCV_size)+'.txt','w') as file:
+    file.write(str(NCV))
 del(file)    
 
 #%% ### Cell 4 ###
-#Check fake data for generation errors
-Fake = np.array(Fake,dtype=int)
+#Check NCV data for generation errors
+NCV = np.array(NCV,dtype=int)
 error_r, error_c = [], []
-for tab in Fake:
+for tab in NCV:
     #Check the vertical condition (always <)
     for r in range(1,len(tab)-1):
         for c in range(len(tab[0])):

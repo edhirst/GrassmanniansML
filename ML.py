@@ -2,9 +2,9 @@
 '''
 Run cells:
 Cell 1 ==> import libraries.
-Cell 2 ==> import all the data (real & fake), reformat the tableaux, and sample the real data so the datasets are balanced for ML.
+Cell 2 ==> import all the data (CV & NCV), reformat the tableaux, and sample the CV data so the datasets are balanced for ML.
 Then choose the investigation: 
-(1) Binary classify real vs fake SSYT (real means a cluster variable, fake not a cluster variable)
+(1) Binary classify CV vs NCV SSYT (CV means a cluster variable, NCV not a cluster variable)
     Cell 3 ==> select which of the 3 datasets to run the ML for ({0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}), format the data for k-fold cross-validation.
     Choose which architecture to train & test:
         Cell 4 ==> SVM
@@ -27,7 +27,7 @@ from sklearn.metrics import matthews_corrcoef as MCC
 #Set-up data import
 Datachoices = [0,1,2] #...select the indices of the filepaths to import data from (i.e. choose the data to import)
 Datafiles = ['./Data/SmallRank6ModulesGr312.txt','./Data/SmallRank6ModulesGr410.txt','./Data/SmallRank4ModulesGr412.txt']
-Fakedatafiles = ['./Data/Fake312_10000.txt','./Data/Fake410_10000.txt','./Data/Fake412_10000.txt']
+NCVdatafiles = ['./Data/NCV312_10000.txt','./Data/NCV410_10000.txt','./Data/NCV412_10000.txt']
 prefixes = [f[-7:-4] for f in Datafiles]
 
 #Import Grassmannians
@@ -62,24 +62,24 @@ for dataset_idx in range(len(Data)):
     Data[dataset_idx] = np.array(Data[dataset_idx])
 del(dataset_idx,tab_idx,tab,new_tab)
 
-#Import fake data
-Fake = []
+#Import NCV data
+NCV = []
 for datapath in Datachoices:
-    Fake.append([])
-    with open(Fakedatafiles[datapath],'r') as file:
-        Fake[-1] = LE(file.read())
-    Fake[-1] = np.array(Fake[-1])
-print('Fake dataset sizes: '+str(list(map(len,Fake))))
+    NCV.append([])
+    with open(NCVdatafiles[datapath],'r') as file:
+        NCV[-1] = LE(file.read())
+    NCV[-1] = np.array(NCV[-1])
+print('NCV dataset sizes: '+str(list(map(len,NCV))))
 del(file,datapath)
 
 ########################################################
 #%% ### Cell 3 ###
-#Binary classify the real vs fake with SVM & NN
+#Binary classify the CV vs NCV with SVM & NN
 #Format the data
 G_choice = 0 #...select which dataset to run the ML for: {0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}
-X = np.concatenate((Data[G_choice],Fake[G_choice]),axis=0)
+X = np.concatenate((Data[G_choice],NCV[G_choice]),axis=0)
 X = X.reshape(X.shape[0],-1) #...flatten the matrices
-Y = np.concatenate((np.ones(len(Data[G_choice])),np.zeros(len(Fake[G_choice]))))
+Y = np.concatenate((np.ones(len(Data[G_choice])),np.zeros(len(NCV[G_choice]))))
 
 #Zip data together & shuffle
 data_size = len(Y)

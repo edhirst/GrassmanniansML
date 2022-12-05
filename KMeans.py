@@ -2,11 +2,11 @@
 '''
 Run cells:
 Cell 1 ==> import libraries.
-Cell 2 ==> import all the data (real & fake), and reformat the tableaux.
-Select the investigation to perform, with variable investigation ({0,1,2} = {real vs fake, all Grs, single Gr}), select the number of clusters to use (if 0 will do elbow method), select which dataset to use if appropriate ({0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}).
+Cell 2 ==> import all the data (CV & NCV), and reformat the tableaux.
+Select the investigation to perform, with variable investigation ({0,1,2} = {CV vs NCV, all Grs, single Gr}), select the number of clusters to use (if 0 will do elbow method), select which dataset to use if appropriate ({0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}).
 Cell 3 ==> perform the selected k-means clustering
 Run misclustering analysis dependend on investigation choice:
-    (0) Cell 4 ==> Real vs Fake 
+    (0) Cell 4 ==> CV vs NCV 
     (1) Cell 5 ==> all Grassmannians
     ...in either case run the respective cell once, note down from the output counts which index corresponds to the correct cluster in each case, and reset the respective 'll' check indices in each case, run the cell again to extract the misclustered tableaux (note this cannot be automated as the clustering process is random and hence inconsistent).
 Cell 6 ==> partition the misclustered tableaux by rank for analysis (can be run after either investigation 0 or 1).
@@ -23,7 +23,7 @@ from collections import Counter
 #Set-up data import
 Datachoices = [0,1,2] #...select the indices of the filepaths to import data from (i.e. choose the data to import)
 Datafiles = ['./Data/SmallRank6ModulesGr312.txt','./Data/SmallRank6ModulesGr410.txt','./Data/SmallRank4ModulesGr412.txt']
-Fakedatafiles = ['./Data/Fake312_10000.txt','./Data/Fake410_10000.txt','./Data/Fake412_10000.txt']
+NCVdatafiles = ['./Data/NCV312_10000.txt','./Data/NCV410_10000.txt','./Data/NCV412_10000.txt']
 prefixes = [f[-7:-4] for f in Datafiles]
 
 #Import Grassmannians
@@ -46,19 +46,19 @@ for dataset_idx in range(len(Data)):
         Data[dataset_idx][tab_idx] = new_tab
     Data[dataset_idx] = np.array(Data[dataset_idx])
 
-#Import fake data
-Fake = []
+#Import NCV data
+NCV = []
 for datapath in Datachoices:
-    Fake.append([])
-    with open(Fakedatafiles[datapath],'r') as file:
-        Fake[-1] = LE(file.read())
-    Fake[-1] = np.array(Fake[-1])
-print('Fake dataset sizes: '+str(list(map(len,Fake))))
+    NCV.append([])
+    with open(NCVdatafiles[datapath],'r') as file:
+        NCV[-1] = LE(file.read())
+    NCV[-1] = np.array(NCV[-1])
+print('NCV dataset sizes: '+str(list(map(len,NCV))))
 
 del(dataset_idx,tab_idx,tab,new_tab,file,line,datapath)
 
 #%% ### Cell 3 ###
-#Select the desired investigation: {0,1,2} = {real vs fake, all Grs, single Gr}
+#Select the desired investigation: {0,1,2} = {CV vs NCV, all Grs, single Gr}
 investigation = 0 
 
 #Perform K-Means
@@ -66,9 +66,9 @@ preset_number_clusters = 0   #...set to chosen number of clusters, or to 0 to de
 max_number_clusters = 15     #...select the maximum number of clusters to consider in the elbow method
 G_choice = 0                 #...select the grassmannian to k-means cluster: {0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}
 
-#Run on real vs fake for selected Grassmannian
+#Run on CV vs NCV for selected Grassmannian
 if investigation == 0:
-    all_data = np.concatenate((Data[G_choice].reshape(Data[G_choice].shape[0],-1),Fake[G_choice].reshape(Fake[G_choice].shape[0],-1))) 
+    all_data = np.concatenate((Data[G_choice].reshape(Data[G_choice].shape[0],-1),NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))) 
 #Run of Grassmannian datasets
 if investigation == 1:
     all_data = np.concatenate((Data[0].reshape(Data[0].shape[0],-1),Data[1].reshape(Data[1].shape[0],-1),Data[2].reshape(Data[2].shape[0],-1))) 
@@ -115,7 +115,7 @@ cluster_sizes = Counter(kmeans_labels)                                    #...co
 print('\nCluster Centres: '+str(kmeans.cluster_centers_.flatten())+'\nCluster sizes: '+str(cluster_sizes)+'\n\nInertia: '+str(full_data_inertia)+'\nNormalised Inertia: '+str(full_data_inertia/len(all_data.flatten()))+'\nNormalised Inertia / range: '+str(full_data_inertia/(len(all_data.flatten())*(max(all_data.flatten())-min(all_data.flatten())))))
 
 #%% ### Cell 4 ### (investigation 0)
-#Count how many of each real/fake tableaux in each cluster, and record those misclustered
+#Count how many of each CV/NCV tableaux in each cluster, and record those misclustered
 Cluster_counts = [np.zeros(preset_number_clusters,dtype='int'),np.zeros(preset_number_clusters,dtype='int')]
 misclustered = [[] for i in range(preset_number_clusters)]
 for idx, ll in enumerate(kmeans_labels[:len(Data[G_choice])]):
@@ -123,7 +123,7 @@ for idx, ll in enumerate(kmeans_labels[:len(Data[G_choice])]):
     if ll == 1: misclustered[0].append(Data[G_choice][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
 for idx, ll in enumerate(kmeans_labels[len(Data[G_choice]):]):
     Cluster_counts[1][ll] += 1
-    if ll == 0: misclustered[1].append(Fake[G_choice][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
+    if ll == 0: misclustered[1].append(NCV[G_choice][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
 
 print(Cluster_counts)
 

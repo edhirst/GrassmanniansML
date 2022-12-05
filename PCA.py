@@ -2,8 +2,8 @@
 '''
 Run cells:
 Cell 1 ==> import libraries.
-Cell 2 ==> import all the data (real & fake), and reformat the tableaux.
-Select which investigation to run: (1) PCA all the data together (Cells 4,5), (2) PCA each dataset (Cell 6), (3) PCA the rank/n partitioned data (Cells 7,8,9), (4) PCA the real vs fake data (Cells 10,11).
+Cell 2 ==> import all the data (CV & NCV), and reformat the tableaux.
+Select which investigation to run: (1) PCA all the data together (Cells 4,5), (2) PCA each dataset (Cell 6), (3) PCA the rank/n partitioned data (Cells 7,8,9), (4) PCA the CV vs NCV data (Cells 10,11).
 (1) Cell 4  ==> select whether to use kernel PCA (if so first run Cell 3), fit the PCA
     Cell 5  ==> plot the PCA results.
 (2) Cell 6  ==> PCA each of the datasets individually, and plot separately.
@@ -25,7 +25,7 @@ from sklearn.decomposition import KernelPCA  #...maps the data to a higher-dimen
 #Set-up data import
 Datachoices = [0,1,2] #...select the indices of the filepaths to import data from (i.e. choose the data to import)
 Datafiles = ['./Data/SmallRank6ModulesGr312.txt','./Data/SmallRank6ModulesGr410.txt','./Data/SmallRank4ModulesGr412.txt']
-Fakedatafiles = ['./Data/Fake312_10000.txt','./Data/Fake410_10000.txt','./Data/Fake412_10000.txt']
+NCVdatafiles = ['./Data/NCV312_10000.txt','./Data/NCV410_10000.txt','./Data/NCV412_10000.txt']
 prefixes = [f[-7:-4] for f in Datafiles]
 
 #Import Grassmannians
@@ -48,19 +48,19 @@ for dataset_idx in range(len(Data)):
         Data[dataset_idx][tab_idx] = new_tab
     Data[dataset_idx] = np.array(Data[dataset_idx])
 
-#Import fake data
-Fake = []
+#Import NCV data
+NCV = []
 for datapath in Datachoices:
-    Fake.append([])
-    with open(Fakedatafiles[datapath],'r') as file:
-        Fake[-1] = LE(file.read())
-    Fake[-1] = np.array(Fake[-1])
-print('Fake dataset sizes: '+str(list(map(len,Fake))))
+    NCV.append([])
+    with open(NCVdatafiles[datapath],'r') as file:
+        NCV[-1] = LE(file.read())
+    NCV[-1] = np.array(NCV[-1])
+print('NCV dataset sizes: '+str(list(map(len,NCV))))
 
 del(dataset_idx,tab_idx,tab,new_tab,file,line,datapath)
 
 #%% ### Cell 3 ###
-#Sample the real data (necessary when using kernel PCA, as memory problems with full datasets)
+#Sample the CV data (necessary when using kernel PCA, as memory problems with full datasets)
 #Save the full data elsewhere to avoid reimporting
 from copy import deepcopy as dc
 Data_backup = dc(Data)
@@ -170,27 +170,27 @@ for lh in leg.legendHandles:
 
 ########################################################
 #%% ### Cell 10 ###
-#PCA the real vs fake
+#PCA the CV vs NCV
 G_choice = 0         #...select the grassmannian to pca: {0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}
 kernel_check = False #...select whether to use Gaussian kernel (True), or simple linear (False)
 
 #PCA transform the full dataset
-all_data = np.concatenate((Data[G_choice].reshape(Data[G_choice].shape[0],-1),Fake[G_choice].reshape(Fake[G_choice].shape[0],-1))) 
+all_data = np.concatenate((Data[G_choice].reshape(Data[G_choice].shape[0],-1),NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))) 
 if not kernel_check: pca = PCA(n_components=24) #...just use 2 components for plotting
 else:                pca = KernelPCA(n_components=2,kernel='rbf') #...specify kernel used
 pca.fit(all_data)
-pcad_datasets = [pca.transform(Data[G_choice].reshape(Data[G_choice].shape[0],-1)),pca.transform(Fake[G_choice].reshape(Fake[G_choice].shape[0],-1))]
+pcad_datasets = [pca.transform(Data[G_choice].reshape(Data[G_choice].shape[0],-1)),pca.transform(NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))]
 print(pca.explained_variance_ratio_)
 
 #%% ### Cell 11 ###
 #Plot the PCA
 plt.figure('PCA')
-plt.scatter(pcad_datasets[0][:,0],pcad_datasets[0][:,1],alpha=0.1,label='Real')
-plt.scatter(pcad_datasets[1][:,0],pcad_datasets[1][:,1],alpha=0.1,label='Fake')
+plt.scatter(pcad_datasets[0][:,0],pcad_datasets[0][:,1],alpha=0.1,label='CV')
+plt.scatter(pcad_datasets[1][:,0],pcad_datasets[1][:,1],alpha=0.1,label='NCV')
 plt.xlabel('PCA component 1')
 plt.ylabel('PCA component 2')
 leg=plt.legend(loc='best')
 for lh in leg.legendHandles: 
     lh.set_alpha(1)
-plt.savefig('./PCA'+str(prefixes[G_choice])+'_allrealvsfake.png')
+plt.savefig('./PCA'+str(prefixes[G_choice])+'_allCVvsNCV.png')
 #del(all_data,d_idx,leg,lh)

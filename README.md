@@ -1,7 +1,7 @@
 # GrassmanniansML
 Generation, data analysis, and machine learning of Grassmannian cluster variables via Young tableaux.  
    
-The `Data` folder contains the respective generated cluster variables, as semi-standard Young tableaux, as well as the equivelent fake data of tableauxx which are not cluster variables.   
+The `Data` folder contains the respective generated cluster variables, as semi-standard Young tableaux, as well as the equivalent non-cluster variable data of tableaux which are not cluster variables.   
 ...download and unzip the files before running analysis & machine learning.    
    
 The python script `HPC_Generation.py` generates cluster variables as semi-standard Young tableaux stochastically via mutation, saving those of ranks under consideration. The file is set-up for parallelisation on a hpc cluster, saving subfiles intermittently which are later combined (taking the union of all variables).  
