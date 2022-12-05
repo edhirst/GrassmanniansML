@@ -2,7 +2,7 @@
 '''
 Run cells:
 Cell 1 ==> import libraries.
-Cell 2 ==> import all the data (real & fake), and reformat the tableaux.
+Cell 2 ==> import all the data (CV & NCV), and reformat the tableaux.
 Cell 3 ==> sample tableaux from each dataset to plot as images.
 Cell 4 ==> select the dataset to partition ({0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}), count the partitions of a selected dataset according to tableaux rank.
 Cell 5 ==> select the dataset to partition ({0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}), partition the full dataset according to tableaux rank and n, to produce the N_{k,n,r} table.
@@ -16,8 +16,8 @@ from ast import literal_eval as LE
 #%% ### Cell 2 ###
 #Set-up data import
 Datachoices = [0,1,2] #...select the indices of the filepaths to import data from (i.e. choose the data to import)
-Datafiles = ['./Data/SmallRank6ModulesGr312.txt','./Data/SmallRank6ModulesGr410.txt','./Data/SmallRank4ModulesGr412.txt']
-Fakedatafiles = ['./Data/Fake312_10000.txt','./Data/Fake410_10000.txt','./Data/Fake412_10000.txt']
+Datafiles =    ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
+NCVdatafiles = ['./Data/NCVData/NCV_Gr312_Rank6.txt','./Data/NCVData/NCV_Gr410_Rank6.txt','./Data/NCVData/NCV_Gr412_Rank4.txt']
 prefixes = [f[-7:-4] for f in Datafiles]
 
 #Import Grassmannians
@@ -40,14 +40,14 @@ for dataset_idx in range(len(Data)):
         Data[dataset_idx][tab_idx] = new_tab
     Data[dataset_idx] = np.array(Data[dataset_idx])
 
-#Import fake data
-Fake = []
+#Import NCV data
+NCV = []
 for datapath in Datachoices:
-    Fake.append([])
-    with open(Fakedatafiles[datapath],'r') as file:
-        Fake[-1] = LE(file.read())
-    Fake[-1] = np.array(Fake[-1])
-print('Fake dataset sizes: '+str(list(map(len,Fake))))
+    NCV.append([])
+    with open(NCVdatafiles[datapath],'r') as file:
+        NCV[-1] = LE(file.read())
+    NCV[-1] = np.array(NCV[-1])
+print('NCV dataset sizes: '+str(list(map(len,NCV))))
 
 del(dataset_idx,tab_idx,tab,new_tab,file,line,datapath)
 
