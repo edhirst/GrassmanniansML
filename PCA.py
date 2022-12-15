@@ -24,29 +24,29 @@ from sklearn.decomposition import KernelPCA  #...maps the data to a higher-dimen
 #%% ### Cell 2 ###
 #Set-up data import
 Datachoices = [0,1,2] #...select the indices of the filepaths to import data from (i.e. choose the data to import)
-Datafiles =    ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
+CVdatafiles =  ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
 NCVdatafiles = ['./Data/NCVData/NCV_Gr312_Rank6.txt','./Data/NCVData/NCV_Gr410_Rank6.txt','./Data/NCVData/NCV_Gr412_Rank4.txt']
-prefixes = [f[-7:-4] for f in Datafiles]
+prefixes = [f[-7:-4] for f in CVdatafiles]
 
 #Import Grassmannians
-Data = []
+CV = []
 for datapath in Datachoices:
-    Data.append([])
-    with open(Datafiles[datapath],'r') as file:
+    CV.append([])
+    with open(CVdatafiles[datapath],'r') as file:
         for line in file.readlines():
-            Data[-1].append(LE(line))
-print('Dataset sizes: '+str(list(map(len,Data))))
+            CV[-1].append(LE(line))
+print('Dataset sizes: '+str(list(map(len,CV))))
 
 #Pad data (all datasets to the same size)
-max_height = max([max(map(len,dataset)) for dataset in Data])
-max_width  = max([max(map(len,[tab[0] for tab in dataset])) for dataset in Data]) #...all tableaux rows the same length so can just consider first row
-for dataset_idx in range(len(Data)):
-    for tab_idx in range(len(Data[dataset_idx])):
-        tab = np.array(Data[dataset_idx][tab_idx])
+max_height = max([max(map(len,dataset)) for dataset in CV])
+max_width  = max([max(map(len,[tab[0] for tab in dataset])) for dataset in CV]) #...all tableaux rows the same length so can just consider first row
+for dataset_idx in range(len(CV)):
+    for tab_idx in range(len(CV[dataset_idx])):
+        tab = np.array(CV[dataset_idx][tab_idx])
         new_tab = np.zeros((max_height,max_width),dtype=int)
         new_tab[:len(tab),:len(tab[0])] = tab
-        Data[dataset_idx][tab_idx] = new_tab
-    Data[dataset_idx] = np.array(Data[dataset_idx])
+        CV[dataset_idx][tab_idx] = new_tab
+    CV[dataset_idx] = np.array(CV[dataset_idx])
 
 #Import NCV data
 NCV = []
@@ -63,13 +63,13 @@ del(dataset_idx,tab_idx,tab,new_tab,file,line,datapath)
 #Sample the CV data (necessary when using kernel PCA, as memory problems with full datasets)
 #Save the full data elsewhere to avoid reimporting
 from copy import deepcopy as dc
-Data_backup = dc(Data)
+Data_backup = dc(CV)
 
 #Sample data
 sample_size = 10000 #...set to 0 to use full dataset
 if sample_size:
-    for dataset_idx in range(len(Data)):
-        Data[dataset_idx] = np.array([Data[dataset_idx][i] for i in np.random.choice(len(Data[dataset_idx]),sample_size,replace=False)])
+    for dataset_idx in range(len(CV)):
+        CV[dataset_idx] = np.array([CV[dataset_idx][i] for i in np.random.choice(len(CV[dataset_idx]),sample_size,replace=False)])
 del(dataset_idx)
 
 ########################################################
@@ -78,17 +78,17 @@ del(dataset_idx)
 kernel_check = False #...select whether to use Gaussian kernel (True), or simple linear (False)
 
 #PCA transform the full dataset
-all_data = np.concatenate((Data[0].reshape(Data[0].shape[0],-1),Data[1].reshape(Data[1].shape[0],-1),Data[2].reshape(Data[2].shape[0],-1))) 
+all_data = np.concatenate((CV[0].reshape(CV[0].shape[0],-1),CV[1].reshape(CV[1].shape[0],-1),CV[2].reshape(CV[2].shape[0],-1))) 
 if not kernel_check: pca = PCA(n_components=24) #...just use 2 components for plotting
 else:                pca = KernelPCA(n_components=24,kernel='rbf') #...specify kernel used
 pca.fit(all_data)
-pcad_datasets = [pca.transform(Data[0].reshape(Data[0].shape[0],-1)),pca.transform(Data[1].reshape(Data[1].shape[0],-1)),pca.transform(Data[2].reshape(Data[2].shape[0],-1))]
+pcad_datasets = [pca.transform(CV[0].reshape(CV[0].shape[0],-1)),pca.transform(CV[1].reshape(CV[1].shape[0],-1)),pca.transform(CV[2].reshape(CV[2].shape[0],-1))]
 print(pca.explained_variance_ratio_)
 
 #%% ### Cell 5 ###
 #Plot the PCA
 plt.figure('Full PCA')
-for d_idx in range(len(Data)):
+for d_idx in range(len(CV)):
     plt.scatter(pcad_datasets[d_idx][:,0],pcad_datasets[d_idx][:,1],alpha=0.1,label=r'$\mathbb{C}$[Gr('+prefixes[d_idx][0]+','+prefixes[d_idx][1:]+')]')
 plt.xlabel('PCA component 1')
 plt.ylabel('PCA component 2')
@@ -104,13 +104,13 @@ for lh in leg.legendHandles:
 #PCA the data separately
 #PCA transform the datasets
 pcad_datasets = []
-for d_idx in range(len(Data)):
-    pca = PCA(n_components=Data[d_idx].shape[1]*Data[d_idx].shape[2]) 
-    pcad_datasets.append(pca.fit_transform(Data[d_idx].reshape(Data[d_idx].shape[0],-1)))
+for d_idx in range(len(CV)):
+    pca = PCA(n_components=CV[d_idx].shape[1]*CV[d_idx].shape[2]) 
+    pcad_datasets.append(pca.fit_transform(CV[d_idx].reshape(CV[d_idx].shape[0],-1)))
     print('Explained Variance ratio for dataset '+str(prefixes[d_idx])+':\n'+str(pca.explained_variance_ratio_)+' (i.e. normalised eigenvalues)') #...note components gives rows as eigenvectors
 
 #Plot the PCA transformed datasets
-for d_idx in range(len(Data)):
+for d_idx in range(len(CV)):
     plt.figure('Dataset: '+str(prefixes[d_idx]))
     #plt.title('Dataset '+str(prefixes[d_idx]))
     plt.scatter(pcad_datasets[d_idx][:,0],pcad_datasets[d_idx][:,1],alpha=0.1)
@@ -127,7 +127,7 @@ datainfo = [[3,12,6],[4,10,6],[4,12,4]]
 
 #Partition the dataset
 r_partitioned, n_partitioned = [[] for i in range(datainfo[G_choice][2])], [[] for i in range(datainfo[G_choice][0],datainfo[G_choice][1]+1)]
-for tab in Data[G_choice]:
+for tab in CV[G_choice]:
     n_partitioned[max(tab.flatten())-datainfo[G_choice][0]].append(tab)
     #Identify where columns padded to establish a lower rank
     smaller = False
@@ -144,7 +144,7 @@ n_partitioned = [np.array(i) for i in n_partitioned]
 #%% ### Cell 8 ###
 #Perform the PCA
 pca = PCA(24)
-pca.fit(Data[G_choice].reshape(Data[G_choice].shape[0],-1))
+pca.fit(CV[G_choice].reshape(CV[G_choice].shape[0],-1))
 pcad_rpartitions = [pca.transform(i.reshape(i.shape[0],-1)) for i in r_partitioned]
 pcad_npartitions = [pca.transform(i.reshape(i.shape[0],-1)) for i in n_partitioned]
 
@@ -175,11 +175,11 @@ G_choice = 0         #...select the grassmannian to pca: {0,1,2} = {Gr(3,12)r6, 
 kernel_check = False #...select whether to use Gaussian kernel (True), or simple linear (False)
 
 #PCA transform the full dataset
-all_data = np.concatenate((Data[G_choice].reshape(Data[G_choice].shape[0],-1),NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))) 
+all_data = np.concatenate((CV[G_choice].reshape(CV[G_choice].shape[0],-1),NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))) 
 if not kernel_check: pca = PCA(n_components=24) #...just use 2 components for plotting
 else:                pca = KernelPCA(n_components=2,kernel='rbf') #...specify kernel used
 pca.fit(all_data)
-pcad_datasets = [pca.transform(Data[G_choice].reshape(Data[G_choice].shape[0],-1)),pca.transform(NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))]
+pcad_datasets = [pca.transform(CV[G_choice].reshape(CV[G_choice].shape[0],-1)),pca.transform(NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))]
 print(pca.explained_variance_ratio_)
 
 #%% ### Cell 11 ###

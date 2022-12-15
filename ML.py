@@ -26,18 +26,18 @@ from sklearn.metrics import matthews_corrcoef as MCC
 #%% ### Cell 2 ###
 #Set-up data import
 Datachoices = [0,1,2] #...select the indices of the filepaths to import data from (i.e. choose the data to import)
-Datafiles =    ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
+CVdatafiles =  ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
 NCVdatafiles = ['./Data/NCVData/NCV_Gr312_Rank6.txt','./Data/NCVData/NCV_Gr410_Rank6.txt','./Data/NCVData/NCV_Gr412_Rank4.txt']
-prefixes = [f[-7:-4] for f in Datafiles]
+prefixes = [f[-7:-4] for f in CVdatafiles]
 
 #Import Grassmannians
-Data = []
+CV = []
 for datapath in Datachoices:
-    Data.append([])
-    with open(Datafiles[datapath],'r') as file:
+    CV.append([])
+    with open(CVdatafiles[datapath],'r') as file:
         for line in file.readlines():
-            Data[-1].append(LE(line))
-print('Dataset sizes: '+str(list(map(len,Data))))
+            CV[-1].append(LE(line))
+print('Dataset sizes: '+str(list(map(len,CV))))
 del(file,line,datapath)
 
 #Sample data
@@ -45,21 +45,21 @@ sample_size = 10000 #...set to 0 to use full dataset
 if sample_size:
     #Save the full data elsewhere to avoid reimporting
     from copy import deepcopy as dc
-    Data_backup = dc(Data)
+    Data_backup = dc(CV)
     #Sample SSYTs
-    for dataset_idx in range(len(Data)):
-        Data[dataset_idx] = [Data[dataset_idx][i] for i in np.random.choice(len(Data[dataset_idx]),sample_size,replace=False)]
+    for dataset_idx in range(len(CV)):
+        CV[dataset_idx] = [CV[dataset_idx][i] for i in np.random.choice(len(CV[dataset_idx]),sample_size,replace=False)]
 
 #Pad data (all datasets to the same size)
-max_height = max([max(map(len,dataset)) for dataset in Data])
-max_width  = max([max(map(len,[tab[0] for tab in dataset])) for dataset in Data]) #...all tableaux rows the same length so can just consider first row
-for dataset_idx in range(len(Data)):
-    for tab_idx in range(len(Data[dataset_idx])):
-        tab = np.array(Data[dataset_idx][tab_idx])
+max_height = max([max(map(len,dataset)) for dataset in CV])
+max_width  = max([max(map(len,[tab[0] for tab in dataset])) for dataset in CV]) #...all tableaux rows the same length so can just consider first row
+for dataset_idx in range(len(CV)):
+    for tab_idx in range(len(CV[dataset_idx])):
+        tab = np.array(CV[dataset_idx][tab_idx])
         new_tab = np.zeros((max_height,max_width),dtype=int)
         new_tab[:len(tab),:len(tab[0])] = tab
-        Data[dataset_idx][tab_idx] = new_tab
-    Data[dataset_idx] = np.array(Data[dataset_idx])
+        CV[dataset_idx][tab_idx] = new_tab
+    CV[dataset_idx] = np.array(CV[dataset_idx])
 del(dataset_idx,tab_idx,tab,new_tab)
 
 #Import NCV data
@@ -77,9 +77,9 @@ del(file,datapath)
 #Binary classify the CV vs NCV with SVM & NN
 #Format the data
 G_choice = 0 #...select which dataset to run the ML for: {0,1,2} = {Gr(3,12)r6, Gr(4,10)r6, Gr(4,12)r4}
-X = np.concatenate((Data[G_choice],NCV[G_choice]),axis=0)
+X = np.concatenate((CV[G_choice],NCV[G_choice]),axis=0)
 X = X.reshape(X.shape[0],-1) #...flatten the matrices
-Y = np.concatenate((np.ones(len(Data[G_choice])),np.zeros(len(NCV[G_choice]))))
+Y = np.concatenate((np.ones(len(CV[G_choice])),np.zeros(len(NCV[G_choice]))))
 
 #Zip data together & shuffle
 data_size = len(Y)
@@ -170,9 +170,9 @@ print('Misclassifications:',[[len(i[0]),len(i[1])] for i in misclassifications])
 #%% ### Cell 6 ###
 #Classification between the Grassmannians
 #Format the data
-X = np.concatenate((Data[0],Data[1],Data[2]))
+X = np.concatenate((CV[0],CV[1],CV[2]))
 X = X.reshape(X.shape[0],-1)
-Y = np.concatenate((np.zeros(len(Data[0])),np.ones(len(Data[1])),np.full(len(Data[2]),2)))
+Y = np.concatenate((np.zeros(len(CV[0])),np.ones(len(CV[1])),np.full(len(CV[2]),2)))
 
 #Zip data together & shuffle
 data_size = len(Y)

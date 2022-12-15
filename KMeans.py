@@ -22,29 +22,29 @@ from collections import Counter
 #%% ### Cell 2 ###
 #Set-up data import
 Datachoices = [0,1,2] #...select the indices of the filepaths to import data from (i.e. choose the data to import)
-Datafiles =    ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
+CVdatafiles =  ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
 NCVdatafiles = ['./Data/NCVData/NCV_Gr312_Rank6.txt','./Data/NCVData/NCV_Gr410_Rank6.txt','./Data/NCVData/NCV_Gr412_Rank4.txt']
-prefixes = [f[-7:-4] for f in Datafiles]
+prefixes = [f[-7:-4] for f in CVdatafiles]
 
 #Import Grassmannians
-Data = []
+CV = []
 for datapath in Datachoices:
-    Data.append([])
-    with open(Datafiles[datapath],'r') as file:
+    CV.append([])
+    with open(CVdatafiles[datapath],'r') as file:
         for line in file.readlines():
-            Data[-1].append(LE(line))
-print('Dataset sizes: '+str(list(map(len,Data))))
+            CV[-1].append(LE(line))
+print('Dataset sizes: '+str(list(map(len,CV))))
 
 #Pad data (all datasets to the same size)
-max_height = max([max(map(len,dataset)) for dataset in Data])
-max_width  = max([max(map(len,[tab[0] for tab in dataset])) for dataset in Data]) #...all tableaux rows the same length so can just consider first row
-for dataset_idx in range(len(Data)):
-    for tab_idx in range(len(Data[dataset_idx])):
-        tab = np.array(Data[dataset_idx][tab_idx])
+max_height = max([max(map(len,dataset)) for dataset in CV])
+max_width  = max([max(map(len,[tab[0] for tab in dataset])) for dataset in CV]) #...all tableaux rows the same length so can just consider first row
+for dataset_idx in range(len(CV)):
+    for tab_idx in range(len(CV[dataset_idx])):
+        tab = np.array(CV[dataset_idx][tab_idx])
         new_tab = np.zeros((max_height,max_width),dtype=int)
         new_tab[:len(tab),:len(tab[0])] = tab
-        Data[dataset_idx][tab_idx] = new_tab
-    Data[dataset_idx] = np.array(Data[dataset_idx])
+        CV[dataset_idx][tab_idx] = new_tab
+    CV[dataset_idx] = np.array(CV[dataset_idx])
 
 #Import NCV data
 NCV = []
@@ -68,13 +68,13 @@ G_choice = 0                 #...select the grassmannian to k-means cluster: {0,
 
 #Run on CV vs NCV for selected Grassmannian
 if investigation == 0:
-    all_data = np.concatenate((Data[G_choice].reshape(Data[G_choice].shape[0],-1),NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))) 
+    all_data = np.concatenate((CV[G_choice].reshape(CV[G_choice].shape[0],-1),NCV[G_choice].reshape(NCV[G_choice].shape[0],-1))) 
 #Run of Grassmannian datasets
 if investigation == 1:
-    all_data = np.concatenate((Data[0].reshape(Data[0].shape[0],-1),Data[1].reshape(Data[1].shape[0],-1),Data[2].reshape(Data[2].shape[0],-1))) 
+    all_data = np.concatenate((CV[0].reshape(CV[0].shape[0],-1),CV[1].reshape(CV[1].shape[0],-1),CV[2].reshape(CV[2].shape[0],-1))) 
 #Run on a single Grassmannian dataset
 if investigation == 2:
-    all_data = Data[G_choice].reshape(Data[G_choice].shape[0],-1)
+    all_data = CV[G_choice].reshape(CV[G_choice].shape[0],-1)
 
 
 #Run K-Means Clustering
@@ -118,10 +118,10 @@ print('\nCluster Centres: '+str(kmeans.cluster_centers_.flatten())+'\nCluster si
 #Count how many of each CV/NCV tableaux in each cluster, and record those misclustered
 Cluster_counts = [np.zeros(preset_number_clusters,dtype='int'),np.zeros(preset_number_clusters,dtype='int')]
 misclustered = [[] for i in range(preset_number_clusters)]
-for idx, ll in enumerate(kmeans_labels[:len(Data[G_choice])]):
+for idx, ll in enumerate(kmeans_labels[:len(CV[G_choice])]):
     Cluster_counts[0][ll] += 1
-    if ll == 1: misclustered[0].append(Data[G_choice][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
-for idx, ll in enumerate(kmeans_labels[len(Data[G_choice]):]):
+    if ll == 1: misclustered[0].append(CV[G_choice][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
+for idx, ll in enumerate(kmeans_labels[len(CV[G_choice]):]):
     Cluster_counts[1][ll] += 1
     if ll == 0: misclustered[1].append(NCV[G_choice][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
 
@@ -131,15 +131,15 @@ print(Cluster_counts)
 #Count how many of each Grassmannian in each cluster, and record those misclustered
 Cluster_counts = [np.zeros(preset_number_clusters,dtype='int') for dset in Datachoices]
 misclustered = [[] for i in range(preset_number_clusters)]
-for idx, ll in enumerate(kmeans_labels[:len(Data[0])]):
+for idx, ll in enumerate(kmeans_labels[:len(CV[0])]):
     Cluster_counts[0][ll] += 1
-    if ll != 1: misclustered[0].append(Data[0][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
-for idx, ll in enumerate(kmeans_labels[len(Data[0]):len(Data[0])+len(Data[1])]):
+    if ll != 1: misclustered[0].append(CV[0][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
+for idx, ll in enumerate(kmeans_labels[len(CV[0]):len(CV[0])+len(CV[1])]):
     Cluster_counts[1][ll] += 1
-    if ll != 2: misclustered[1].append(Data[1][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
-for idx, ll in enumerate(kmeans_labels[len(Data[0])+len(Data[1]):]):
+    if ll != 2: misclustered[1].append(CV[1][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
+for idx, ll in enumerate(kmeans_labels[len(CV[0])+len(CV[1]):]):
     Cluster_counts[2][ll] += 1
-    if ll != 0: misclustered[2].append(Data[2][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
+    if ll != 0: misclustered[2].append(CV[2][idx]) #...this index is hardcoded from a previous run to know what cluster each GR should be in
     
 print(Cluster_counts)
 

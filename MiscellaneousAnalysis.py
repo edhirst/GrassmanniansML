@@ -16,29 +16,29 @@ from ast import literal_eval as LE
 #%% ### Cell 2 ###
 #Set-up data import
 Datachoices = [0,1,2] #...select the indices of the filepaths to import data from (i.e. choose the data to import)
-Datafiles =    ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
+CVdatafiles =  ['./Data/CVData/CV_Gr312_Rank6.txt',  './Data/CVData/CV_Gr410_Rank6.txt',  './Data/CVData/CV_Gr412_Rank4.txt']
 NCVdatafiles = ['./Data/NCVData/NCV_Gr312_Rank6.txt','./Data/NCVData/NCV_Gr410_Rank6.txt','./Data/NCVData/NCV_Gr412_Rank4.txt']
-prefixes = [f[-7:-4] for f in Datafiles]
+prefixes = [f[-7:-4] for f in CVdatafiles]
 
 #Import Grassmannians
-Data = []
+CV = []
 for datapath in Datachoices:
-    Data.append([])
-    with open(Datafiles[datapath],'r') as file:
+    CV.append([])
+    with open(CVdatafiles[datapath],'r') as file:
         for line in file.readlines():
-            Data[-1].append(LE(line))
-print('Dataset sizes: '+str(list(map(len,Data))))
+            CV[-1].append(LE(line))
+print('Dataset sizes: '+str(list(map(len,CV))))
 
 #Pad data (all datasets to the same size)
-max_height = max([max(map(len,dataset)) for dataset in Data])
-max_width  = max([max(map(len,[tab[0] for tab in dataset])) for dataset in Data]) #...all tableaux rows the same length so can just consider first row
-for dataset_idx in range(len(Data)):
-    for tab_idx in range(len(Data[dataset_idx])):
-        tab = np.array(Data[dataset_idx][tab_idx])
+max_height = max([max(map(len,dataset)) for dataset in CV])
+max_width  = max([max(map(len,[tab[0] for tab in dataset])) for dataset in CV]) #...all tableaux rows the same length so can just consider first row
+for dataset_idx in range(len(CV)):
+    for tab_idx in range(len(CV[dataset_idx])):
+        tab = np.array(CV[dataset_idx][tab_idx])
         new_tab = np.zeros((max_height,max_width),dtype=int)
         new_tab[:len(tab),:len(tab[0])] = tab
-        Data[dataset_idx][tab_idx] = new_tab
-    Data[dataset_idx] = np.array(Data[dataset_idx])
+        CV[dataset_idx][tab_idx] = new_tab
+    CV[dataset_idx] = np.array(CV[dataset_idx])
 
 #Import NCV data
 NCV = []
@@ -55,13 +55,13 @@ del(dataset_idx,tab_idx,tab,new_tab,file,line,datapath)
 #%% ### Cell 3 ###
 #Select tableaux to plot
 number_tab = 10 #..select how many tableaux to plot from each dataset
-choices = [np.random.choice(range(len(Data[i])),number_tab,replace=False) for i in range(len(Datafiles))] 
+choices = [np.random.choice(range(len(CV[i])),number_tab,replace=False) for i in range(len(CVdatafiles))] 
 
 #Plot sample of SSYTs as images
 for f in range(len(choices)):
     for i in choices[f]:
         plt.axis('off')
-        plt.imshow(Data[f][i])
+        plt.imshow(CV[f][i])
         #plt.savefig('./Images/'+str(prefixes[f])+'_'+str(i)+'.pdf')
 del(f,i)
 
@@ -71,7 +71,7 @@ G_choice = 0 #...choose the grassmannian to partition: {0,1,2} = {Gr(3,12)r6, Gr
 
 #Rank partition the full datasets 
 r_parts = np.zeros(6)
-for tab in Data[G_choice]:
+for tab in CV[G_choice]:
     if   tab[0][1] == 0: r_parts[0]+=1
     elif tab[0][2] == 0: r_parts[1]+=1
     elif tab[0][3] == 0: r_parts[2]+=1
@@ -90,7 +90,7 @@ datainfo = [[3,12,6],[4,10,6],[4,12,4]]
 N = np.zeros((datainfo[G_choice][1]-datainfo[G_choice][0]+1,datainfo[G_choice][2]),dtype=int)
 
 #Loop through SSYTs and count respective table entries
-for tab in Data[G_choice]:
+for tab in CV[G_choice]:
     #Identify rank
     smaller = False
     for i, e in enumerate(tab[0]):

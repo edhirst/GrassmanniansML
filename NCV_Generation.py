@@ -17,28 +17,28 @@ NCV_size = 10000    #...select how many NCV SSYTs to make
 resample_freq = 6   #...choose how frequently to resample entries ~ 1/resample_size (note only updates the middle)
 
 #Import data
-Datafiles = ['./Data/CVData/CV_Gr312_Rank6.txt','./Data/CVData/CV_Gr410_Rank6.txt','./Data/CVData/CV_Gr412_Rank4.txt']
-prefixes = [f[-7:-4] for f in Datafiles]
-n, k, max_r = int(prefixes[G_choice][0]), int(prefixes[G_choice][1:]), int(Datafiles[G_choice][-17]) #...entries of Gr(n,k) & rank --> number of rows, max entry, and max number of columns respectively
+CVdatafiles = ['./Data/CVData/CV_Gr312_Rank6.txt','./Data/CVData/CV_Gr410_Rank6.txt','./Data/CVData/CV_Gr412_Rank4.txt']
+prefixes = [f[-7:-4] for f in CVdatafiles]
+n, k, max_r = int(prefixes[G_choice][0]), int(prefixes[G_choice][1:]), int(CVdatafiles[G_choice][-17]) #...entries of Gr(n,k) & rank --> number of rows, max entry, and max number of columns respectively
 
-Data = []
-with open(Datafiles[G_choice],'r') as file:
+CV = []
+with open(CVdatafiles[G_choice],'r') as file:
     for line in file.readlines():
-        Data.append(LE(line))
-print('Dataset sizes: '+str(len(Data)))
+        CV.append(LE(line))
+print('Dataset sizes: '+str(len(CV)))
 del(file,line)
 
 #Extract data info
-max_height = max(map(len,Data)) 
-max_width  = max(map(len,[tab[0] for tab in Data])) #...all tableaux rows the same length so can just consider first row
+max_height = max(map(len,CV)) 
+max_width  = max(map(len,[tab[0] for tab in CV])) #...all tableaux rows the same length so can just consider first row
 
 #Pad data (all datasets to the same size)
-for tab_idx in range(len(Data)):
-    tab = np.array(Data[tab_idx])
+for tab_idx in range(len(CV)):
+    tab = np.array(CV[tab_idx])
     new_tab = np.zeros((max_height,max_width),dtype=int)
     new_tab[:len(tab),:len(tab[0])] = tab
-    Data[tab_idx] = new_tab
-Data = np.array(Data)
+    CV[tab_idx] = new_tab
+CV = np.array(CV)
 del(tab_idx,tab,new_tab)
 
 #%% ### Cell 2 ###
@@ -102,7 +102,7 @@ while len(NCV) < NCV_size:
     trial = np.array(new_tab)
         
     #Check not in the CV data
-    for tab in Data:
+    for tab in CV:
         if np.array_equal(trial,tab): 
             skip = True
             break
