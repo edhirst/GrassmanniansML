@@ -12,5 +12,17 @@ The scripts `ML.py`, `PCA.py`, and `KMeans.py` perform the respective supervised
 The `MiscellaneousAnalysis.py` script contains additional analysis used for results in this research.  
 
 
-
+# BibTeX Citation
+``` 
+@article{Cheung:2022itk,
+    author = "Cheung, Man-Wai and Dechant, Pierre-Philippe and He, Yang-Hui and Heyes, Elli and Hirst, Edward and Li, Jian-Rong",
+    title = "{Clustering Cluster Algebras with Clusters}",
+    eprint = "2212.09771",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-th",
+    reportNumber = "LIMS-2022-025",
+    month = "12",
+    year = "2022"
+}
+```
 
