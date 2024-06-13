@@ -21,8 +21,12 @@ The `MiscellaneousAnalysis.py` script contains additional analysis used for resu
     archivePrefix = "arXiv",
     primaryClass = "hep-th",
     reportNumber = "LIMS-2022-025",
-    month = "12",
-    year = "2022"
+    doi = "10.4310/ATMP.2023.v27.n3.a5",
+    journal = "Adv. Theor. Math. Phys.",
+    volume = "27",
+    number = "3",
+    pages = "797--828",
+    year = "2023"
 }
 ```
 
